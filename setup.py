@@ -20,6 +20,7 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Office/Business :: Financial",
     ],
+    install_requires=["pprint"],
     extras_require={
         'lint': [
             "pylint",
