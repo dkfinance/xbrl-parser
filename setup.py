@@ -20,6 +20,13 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Office/Business :: Financial",
     ],
+    entry_points={
+        'console_scripts': [
+            'parse_ifrs=xbrl_parser.console_scripts.__main__:parse_ifrs',
+            'parse_gaap=xbrl_parser.console_scripts.__main__:parse_gaap',
+            'parse_dei=xbrl_parser.console_scripts.__main__:parse_dei',
+        ]
+    },
     install_requires=["pprint"],
     extras_require={
         'lint': [
