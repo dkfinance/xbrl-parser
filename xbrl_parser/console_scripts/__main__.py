@@ -1,31 +1,23 @@
-from pprint import pprint
+import json
 
+from xbrl_parser import XBRL
 from xbrl_parser.console_scripts import argument_parser
-from xbrl_parser.dei import DEI
-from xbrl_parser.gaap import GAAP
-from xbrl_parser.ifrs import IFRS
 
 
-def parse_ifrs():
+def main():
     args = argument_parser.default()
+    xbrl_standard = args.xbrl_standard
+    xbrl_standard = xbrl_standard.lower()
+    if xbrl_standard == "ifrs":
+        xbrl_standard = "ifrs-full"
+    elif xbrl_standard not in ["gaap", "dei"]:
+        raise NotImplementedError("The standard %s is not available." % xbrl_standard)
+
     for file in args.files:
-        ifrs = IFRS(file=file)
-        pprint(ifrs.financials)
-
-
-def parse_gaap():
-    args = argument_parser.default()
-    for file in args.files:
-        gaap = GAAP(file=file)
-        pprint(gaap.financials)
-
-
-def parse_dei():
-    args = argument_parser.default()
-    for file in args.files:
-        dei = DEI(file=file)
-        pprint(dei.financials)
+        ifrs = XBRL(file, xbrl_standard)
+        ifrs.parse()
+        print(json.dumps(ifrs.financials, indent=4, sort_keys=True, default=str))
 
 
 if __name__ == '__main__':
-    parse_ifrs()
+    main()
