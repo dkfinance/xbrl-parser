@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 import xmltodict
+
 from xbrl_parser.utilities import convert_to_correct_type, xbrli_convert_period, camel_to_snake, xbrli_parse_scenario, \
     xbrli_convert_entity
 
@@ -55,25 +56,94 @@ class XBRL:
 
     def _parse_statement(self, val, name):
         if isinstance(val, list):
-            self.financials[name] = []
             for p in val:
-                if isinstance(p, OrderedDict):
-                    self.financials[name].append(self._parse_single_statement(p))
-                else:
-                    raise Exception(":-(")
+                self._append_financials(name=name, val=p)
         elif name == "ifrs-full":
             return
         elif name == "ifrs-dk":
             return
+        elif isinstance(val, OrderedDict):
+            self._append_financials(name=name, val=val)
         else:
             raise NotImplementedError(name)
+
+    def _append_financials(self, name, val):
+        if isinstance(val, OrderedDict):
+            if name not in self.financials:
+                self.financials[name] = []
+            self.financials[name].append(self._parse_single_statement(val))
+        else:
+            raise Exception(":-(")
 
     def _parse_single_statement(self, p):
         context_ref = p["@contextRef"]
         unit = p["@unitRef"]
         value = convert_to_correct_type(p["#text"])
-        return {
-            "context_ref": self.context[context_ref],
+        ok = self.context[context_ref]
+        result = {
             "unit": unit,
-            "value": value
+            "value": value,
+            "period": ok["period"]
         }
+        result.update()
+        return result
+
+    def get_list_asset(self, name: str):
+        f = self.financials[name]
+        result = {}
+        for ob in f:
+            year = next(iter(ob["period"].values())).year
+            if year not in result:
+                result[year] = 0
+            result[year] += ob["value"]
+        return result
+
+    def get_nwc(self, newest_year=True):
+        data = self.get_list_asset(name="current_assets")
+        year = self.get_newest_year(data) if newest_year else self.get_oldest_year(data)
+        return (self.get_list_asset(name="current_assets")[year] -
+                self.get_list_asset(name="current_liabilities")[year])
+
+    def get_ebit(self, newest_year=True):
+        data = self.get_list_asset("profit_loss_from_operating_activities")
+        year = self.get_newest_year(data) if newest_year else self.get_oldest_year(data)
+        return data[year]
+
+    def get_ppe(self, newest_year=True):
+        data = self.get_list_asset("property_plant_and_equipment")
+        year = self.get_newest_year(data) if newest_year else self.get_oldest_year(data)
+        return data[year]
+
+    def get_current_assets(self, newest_year=True):
+        data = self.get_list_asset("current_assets")
+        year = self.get_newest_year(data) if newest_year else self.get_oldest_year(data)
+        return data[year]
+
+    def get_current_liabilities(self, newest_year=True):
+        data = self.get_list_asset("current_liabilities")
+        year = self.get_newest_year(data) if newest_year else self.get_oldest_year(data)
+        return data[year]
+
+    def get_current_ratio(self, newest_year=True):
+        current_assets = self.get_current_assets(newest_year)
+        current_liabilities = self.get_current_liabilities(newest_year)
+        return current_assets / current_liabilities
+
+    @staticmethod
+    def get_newest_year(data: {}):
+        year = 0
+        for key, val in data.items():
+            if key < year:
+                continue
+            year = key
+
+        return year
+
+    @staticmethod
+    def get_oldest_year(data: {}):
+        year = None
+        for key, val in data.items():
+            if year is None or key < year:
+                year = key
+
+        return year
