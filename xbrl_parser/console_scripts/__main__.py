@@ -9,7 +9,7 @@ def main():
     xbrl_standard = args.xbrl_standard
     xbrl_standard = xbrl_standard.lower()
     if xbrl_standard == "ifrs":
-        xbrl_standard = "ifrs-full"
+        xbrl_standard = "ifrs"
     elif xbrl_standard not in ["gaap", "dei"]:
         raise NotImplementedError("The standard %s is not available." % xbrl_standard)
 

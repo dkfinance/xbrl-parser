@@ -8,7 +8,10 @@ def convert_to_correct_type(val: str):
     try:
         return datetime.strptime(val, "%Y-%m-%d").date()
     except ValueError:
-        return ast.literal_eval(val)
+        try:
+            return ast.literal_eval(val)
+        except Exception:
+            return val
     except Exception:
         return val
 

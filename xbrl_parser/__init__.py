@@ -64,6 +64,8 @@ class XBRL:
             return
         elif isinstance(val, OrderedDict):
             self._append_financials(name=name, val=val)
+        elif "http://" in val:
+            return
         else:
             raise NotImplementedError(name)
 
@@ -77,7 +79,7 @@ class XBRL:
 
     def _parse_single_statement(self, p):
         context_ref = p["@contextRef"]
-        unit = p["@unitRef"]
+        unit = p["@unitRef"] if "@unitRef" in p else None
         value = convert_to_correct_type(p["#text"])
         ok = self.context[context_ref]
         result = {
