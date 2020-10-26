@@ -25,7 +25,6 @@ setuptools.setup(
             'parse_xbrl=xbrl_parser.console_scripts.__main__:main',
         ]
     },
-    install_requires=["pprint"],
     extras_require={
         'lint': [
             "pylint",
